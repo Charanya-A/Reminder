@@ -1,52 +1,82 @@
 export class Reminder {
-    id: number;
-    title: string;
-    date: Date;
-  
-    constructor(id: number, title: string, date: Date) {
-      this.id = id;
-      this.title = title;
-      this.date = date;
-    }
+  id: string;
+  title: string;
+  date: string;
+  completed: boolean;
+
+  constructor(id: string, title: string, date: string) {
+    this.id = id;
+    this.title = title;
+    this.date = date;
+    this.completed = false; // Default: not completed
   }
-  
+}
+
 export class ReminderDatabase {
-    private reminders: Map<number, Reminder>;
-  
-    constructor() {
-      this.reminders = new Map();
+  private reminders: Reminder[] = [];
+
+  createReminder(id: string, title: string, date: string): void {
+    if (this.exists(id)) {
+      console.log(`ID ${id} already exists with the title: ${title}.`);
+      return;
     }
-  
-    createReminder(id: number, title: string, date: Date): void {
-      if (this.reminders.has(id)) {
-        throw new Error("Reminder with this ID already exists.");
-      }
-      this.reminders.set(id, new Reminder(id, title, date));
-    }
-  
-    exists(id: number): boolean {
-      return this.reminders.has(id);
-    }
-  
-    getAllReminders(): Reminder[] {
-      return Array.from(this.reminders.values());
-    }
-  
-    getReminder(id: number): Reminder | null {
-      return this.reminders.get(id) || null;
-    }
-  
-    removeReminder(id: number): boolean {
-      return this.reminders.delete(id);
-    }
-  
-    updateReminder(id: number, title?: string, date?: Date): boolean {
-      if (!this.reminders.has(id)) {
-        return false;
-      }
-      const existingReminder = this.reminders.get(id)!;
-      this.reminders.set(id, new Reminder(id, title ?? existingReminder.title, date ?? existingReminder.date));
-      return true;
+    this.reminders.push(new Reminder(id, title, date));
+  }
+
+  exists(id: string): boolean {
+    return this.reminders.some(reminder => reminder.id === id);
+  }
+
+  markReminderAsCompleted(id: string): void {
+    const reminder = this.getReminder(id);
+    if (reminder) {
+      reminder.completed = true;
+    } else {
+      console.log("Reminder not found.");
     }
   }
-  
+
+  unmarkReminderAsCompleted(id: string): void {
+    const reminder = this.getReminder(id);
+    if (reminder) {
+      reminder.completed = false;
+    } else {
+      console.log("Reminder not found.");
+    }
+  }
+
+  getAllReminders(): Reminder[] {
+    return this.reminders;
+  }
+
+  getReminder(id: string): Reminder | null {
+    return this.reminders.find(reminder => reminder.id === id) || null;
+  }
+
+  getAllRemindersMarkedAsCompleted(): Reminder[] {
+    return this.reminders.filter(reminder => reminder.completed);
+  }
+
+  getAllRemindersNotMarkedAsCompleted(): Reminder[] {
+    return this.reminders.filter(reminder => !reminder.completed);
+  }
+
+  getAllRemindersDueByToday(): Reminder[] {
+    const today = new Date().toISOString().split('T')[0];
+    return this.reminders.filter(reminder => reminder.date === today);
+  }
+
+  updateReminder(id: string, title: string, date: string): void {
+    const reminder = this.getReminder(id);
+    if (reminder) {
+      reminder.title = title;
+      reminder.date = date;
+    } else {
+      console.log("Reminder not found.");
+    }
+  }
+
+  removeReminder(id: string): void {
+    this.reminders = this.reminders.filter(reminder => reminder.id !== id);
+  }
+}
